@@ -1,0 +1,4 @@
+package model
+
+object QueryConstants {
+}

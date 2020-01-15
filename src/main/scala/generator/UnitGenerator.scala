@@ -1,15 +1,15 @@
 package generator
 
-import akka.actor.{ActorRef, ActorSystem, Scheduler}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.jul.Logger
 import com.peertopark.java.geocalc.EarthCalc
-import model.{CompletedStep, GenerateRouteStep, Ride}
 import model.OSMConstants._
+import model.{CompletedStep, GenerateRouteStep, Ride}
 
 import scala.concurrent.duration._
 import scala.util.Random
 
-class UnitGenerator(supervisorActor: ActorRef, scheduler: Scheduler)(implicit system: ActorSystem) {
+class UnitGenerator(supervisorActor: ActorRef)(implicit system: ActorSystem) {
 
   import system.dispatcher
 
@@ -20,7 +20,7 @@ class UnitGenerator(supervisorActor: ActorRef, scheduler: Scheduler)(implicit sy
       case _ =>
         val updatedRide = updateSteps(ride)
         val timeForNextUpdate = 1 + Random.nextDouble()
-        scheduler.scheduleOnce(timeForNextUpdate seconds, supervisorActor, updatedRide)
+        system.scheduler.scheduleOnce(timeForNextUpdate seconds, supervisorActor, updatedRide)
     }
   }
 
@@ -30,7 +30,7 @@ class UnitGenerator(supervisorActor: ActorRef, scheduler: Scheduler)(implicit sy
       ride.remainingTime match {
         case Some(elapsedTime) => elapsedTime
         case None =>
-          val time = System.currentTimeMillis() / math.pow(10, 9)
+          val time = System.currentTimeMillis() / math.pow(10, 3)
           time - ride.previousTime
       }
     }
@@ -62,13 +62,13 @@ class UnitGenerator(supervisorActor: ActorRef, scheduler: Scheduler)(implicit sy
         previousTime = reachTime, remainingTime = Some(remainingTime)))
     }
 
-    def updateStepsForShorterDistance(distanceBetweenPoints: Double, elapsedTime: Double): Ride = {
+    def updateStepsForShorterDistance(traveledDistance: Double, elapsedTime: Double): Ride = {
 
       val nextStep = ride.followingSteps.head
-      val updatedNextPoint = CoordinatesGenerator.generateIntermediatePoint(ride.previousStep.location,
-        nextStep.location, distanceBetweenPoints)
-      val updatedDistance = ride.previousStep.distance - distanceBetweenPoints
-      val updatedPreviousStep = ride.previousStep.copy(location = updatedNextPoint, distance = updatedDistance)
+      val intermediatePoint = CoordinatesGenerator.generateIntermediatePoint(ride.previousStep.location,
+        nextStep.location, traveledDistance)
+      val updatedDistance = ride.previousStep.distance - traveledDistance
+      val updatedPreviousStep = ride.previousStep.copy(location = intermediatePoint, distance = updatedDistance)
 
       val reachTime = ride.previousTime + elapsedTime
       updateCompletedSteps(updatedPreviousStep, reachTime)
@@ -85,14 +85,14 @@ class UnitGenerator(supervisorActor: ActorRef, scheduler: Scheduler)(implicit sy
 
     //time in seconds
     val elapsedTime = getElapsedTime
-    val speed = (ride.previousStep.duration / ride.previousStep.distance) * Random.nextDouble() * MAX_TO_AVG_SPEED_RATIO
+    val speed = (ride.previousStep.distance / ride.previousStep.duration) * Random.nextDouble() * MAX_TO_AVG_SPEED_RATIO
     val traveledDistance = speed * elapsedTime
     val distanceBetweenPoints = getDistanceToNextPoint
 
     if (traveledDistance > distanceBetweenPoints)
       updateStepsForLargerDistance(distanceBetweenPoints, elapsedTime, speed)
     else if (traveledDistance < distanceBetweenPoints)
-      updateStepsForShorterDistance(distanceBetweenPoints, elapsedTime)
+      updateStepsForShorterDistance(traveledDistance, elapsedTime)
     else updateStepsForEqualDistance(elapsedTime)
   }
 }

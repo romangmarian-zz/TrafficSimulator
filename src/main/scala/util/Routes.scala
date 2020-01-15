@@ -7,11 +7,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.util.Timeout
-import akka.pattern._
-import model.{GenerateRequest, JsonSupport, OSMResponse}
+import model.{GenerateRequest, JsonSupport}
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 trait Routes extends JsonSupport {
 
@@ -28,13 +26,8 @@ trait Routes extends JsonSupport {
       pathEnd {
         post {
           entity(as[GenerateRequest]) { request =>
-            val resp = supervisorActor.ask(request).mapTo[List[OSMResponse]]
-            onComplete(resp) {
-              case Success(response) =>
-                complete(response)
-              case Failure(exception) =>
-                complete(HttpResponse(status = StatusCodes.BadRequest, entity = exception.getMessage))
-            }
+            supervisorActor ! request
+            complete(HttpResponse(status = StatusCodes.OK, entity = "Request sent"))
           }
         }
       }

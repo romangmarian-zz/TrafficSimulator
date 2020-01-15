@@ -4,11 +4,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.peertopark.java.geocalc.Point
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
-trait TypeDefinitions {
-
-  type OSMRouteEnds = (Coordinate, Coordinate)
-}
-
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val coordinateJsonFormat: RootJsonFormat[Coordinate] = jsonFormat2(Coordinate)
@@ -20,7 +15,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val stepJsonFormat: RootJsonFormat[Step] = jsonFormat12(Step)
   implicit val legJsonFormat: RootJsonFormat[Legs] = jsonFormat5(Legs)
   implicit val waypointJsonFormat: RootJsonFormat[Waypoint] = jsonFormat4(Waypoint)
-  implicit val routeJsonFormat: RootJsonFormat[Route] = jsonFormat6(Route)
+  implicit val routeJsonFormat: RootJsonFormat[Route] = jsonFormat5(Route)
   implicit val osmResponseJsonFormat: RootJsonFormat[OSMResponse] = jsonFormat3(OSMResponse)
   implicit val osmRequestJsonFormat: RootJsonFormat[GenerateRequest] = jsonFormat3(GenerateRequest)
 }
@@ -98,7 +93,6 @@ case class Waypoint(
                    )
 
 case class Route(
-                  geometry: String,
                   legs: Option[List[Legs]],
                   weight_name: String,
                   weight: Double,
@@ -112,10 +106,6 @@ case class OSMResponse(
                         code: Option[String]
                       )
 
-case class GenerateRoute(
-                          steps: List[GenerateRouteStep]
-                        )
-
 case class GenerateRouteStep(
                               location: Point,
                               bearing: Double,
@@ -124,7 +114,7 @@ case class GenerateRouteStep(
                             )
 
 case class CompletedStep(
-                          unitId: Int,
+                          unitId: Long,
                           step: GenerateRouteStep,
                           time: Long
                         )
@@ -139,6 +129,6 @@ case class Ride(
                  previousStep: GenerateRouteStep,
                  followingSteps: List[GenerateRouteStep],
                  previousTime: Double,
-                 unitId: Int,
+                 unitId: Long,
                  remainingTime: Option[Double] = None
                )

@@ -1,14 +1,18 @@
 package generator
 
-import model.{Coordinate, GenerateRoute, GenerateRouteStep, OSMResponse, Step, TypeDefinitions}
-
-import math.{Pi, cos, sin, sqrt}
-import scala.util.Random
 import com.peertopark.java.geocalc._
+import com.softwaremill.id.{DefaultIdGenerator, IdGenerator}
+import model.{Coordinate, OSMResponse, GenerateRouteStep, Step, Ride}
 
-object CoordinatesGenerator extends TypeDefinitions {
+import scala.math.{Pi, cos, sin, sqrt}
+import scala.util.Random
 
-  def generateRandomCoordinatePairs(origin: Coordinate, radius: Double, nbOfPairs: Int): List[OSMRouteEnds] = {
+object CoordinatesGenerator {
+
+  protected val idGenerator: IdGenerator = new DefaultIdGenerator()
+
+  def generateRandomCoordinatePairs(origin: Coordinate, radius: Double,
+                                    nbOfPairs: Int): List[(Coordinate, Coordinate)] = {
 
     1.to(nbOfPairs).map(_ =>
       (generateCoordinateInRadius(origin, radius), generateCoordinateInRadius(origin, radius))).toList
@@ -30,13 +34,12 @@ object CoordinatesGenerator extends TypeDefinitions {
     EarthCalc.pointRadialDistance(origin, bearing, distance)
   }
 
-  def toGenerateRoute(response: OSMResponse): GenerateRoute = {
+  def toGenerateRoute(response: OSMResponse): List[GenerateRouteStep] = {
 
     val selectedRoute = response.routes.head
     val steps = selectedRoute.legs.getOrElse(Nil).flatMap(_.steps.getOrElse(Nil))
 
-    val generateRouteSteps = steps.map(toGenerateRouteStep)
-    GenerateRoute(generateRouteSteps)
+    steps.map(toGenerateRouteStep)
   }
 
   private def toGenerateRouteStep(step: Step): GenerateRouteStep = {
@@ -46,4 +49,6 @@ object CoordinatesGenerator extends TypeDefinitions {
 
     GenerateRouteStep(location, bearing, step.distance, step.duration)
   }
+
+  def createRideStart(route: List[GenerateRouteStep]): Ride = Ride(route.head, route.tail, System.currentTimeMillis()/math.pow(10,3), idGenerator.nextId())
 }

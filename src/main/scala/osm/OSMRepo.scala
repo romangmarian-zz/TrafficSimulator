@@ -8,31 +8,30 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import model.OSMConstants.URL
-import model.{JsonSupport, OSMResponse, TypeDefinitions}
+import model.{Coordinate, JsonSupport, OSMResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class OSMRepo(implicit val http: HttpExt, val actorMaterializer: ActorMaterializer)
-  extends JsonSupport with TypeDefinitions {
+class OSMRepo(implicit val http: HttpExt, val actorMaterializer: ActorMaterializer) extends JsonSupport {
 
   val logger = Logger("logger")
 
-  def getRequestURI(coordinates: OSMRouteEnds): String = {
+  def getRequestURI(coordinates: (Coordinate, Coordinate)): String = {
     val x = URL + s"${coordinates._1.latitude},${coordinates._1.longitude};" +
-      s"${coordinates._2.latitude},${coordinates._2.longitude}" + "?steps=true"
-
-    logger.info(x.toString)
+      s"${coordinates._2.latitude},${coordinates._2.longitude}" + "?alternatives=false&steps=true&overview=false"
+    logger.warning(x)
     x
   }
 
-  def getHTTPResponse(coordinates: OSMRouteEnds): Future[HttpResponse] = {
+  def getHTTPResponse(coordinates: (Coordinate, Coordinate)): Future[HttpResponse] = {
     http.singleRequest(HttpRequest(GET, getRequestURI(coordinates)))
   }
 
   def toOSMRoute(httpResponse: HttpResponse): Future[OSMResponse] = httpResponse match {
-    case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[OSMResponse]
+    case HttpResponse(StatusCodes.OK, _, entity, _) =>
+      Unmarshal(entity).to[OSMResponse]
     case HttpResponse(status, _, entity, _) =>
       Future.failed(new Exception(handleEndpointError(entity, status)))
   }
@@ -43,7 +42,7 @@ class OSMRepo(implicit val http: HttpExt, val actorMaterializer: ActorMaterializ
     errorMessage
   }
 
-  def getOSMRoute(coordinates: OSMRouteEnds): Future[OSMResponse] = {
+  def getOSMRoute(coordinates: (Coordinate, Coordinate)): Future[OSMResponse] = {
     getHTTPResponse(coordinates).flatMap(toOSMRoute)
   }
 }

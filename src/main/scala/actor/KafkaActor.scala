@@ -5,16 +5,17 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.Logger
 import kafka.StepsProducer
 import model.CompletedStep
-import model.OSMConstants.KAFKA_TOPIC
 
 class KafkaActor(implicit config: Config) extends Actor with ActorLogging with StepsProducer {
 
   override val appConfig: Config = config
 
+  val topic: String = config.getString("kafka.topic")
+
   def receive: Receive = {
     case completedStep: CompletedStep =>
       Logger("log").info(self.path.name + " --->  " + completedStep.toString)
-      submitMsg(KAFKA_TOPIC, completedStep)
+      submitMsg(topic, completedStep)
 
   }
 }

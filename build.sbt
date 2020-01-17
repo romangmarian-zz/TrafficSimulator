@@ -10,7 +10,8 @@ lazy val root = (project in file(".")).
       organization := "nadstrif",
       scalaVersion := "2.12.7"
     )),
-    name := "scala-microservice",
+    name := "traffic-generator",
+    resolvers += Resolver.bintrayRepo("cakesolutions", "maven"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpV,
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpV,
@@ -31,6 +32,10 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-stream-testkit" % akkaV % Test,
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
 
-      "com.softwaremill.common" %% "id-generator" % "1.2.1"
+      "com.softwaremill.common" %% "id-generator" % "1.2.1",
+
+      "net.cakesolutions" %% "scala-kafka-client" % "2.1.0",
+      "net.cakesolutions" %% "scala-kafka-client-akka" % "2.1.0",
+      "com.typesafe.play" %% "play-json" % "2.6.0-M7"
     )
   )

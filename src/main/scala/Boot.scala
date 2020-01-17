@@ -7,24 +7,20 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import com.datastax.driver.core.Session
 import com.typesafe.config.{Config, ConfigFactory}
-import repo.RepoInit
-import util.{DBConfiguration, Routes}
+import util.Routes
 
-object Boot extends App with Routes with RepoInit{
+object Boot extends App with Routes {
   val httpAddress: String = "localhost"
   val port: Int = 8080
 
-  // set up ActorSystem and other dependencies here
   implicit val config: Config = ConfigFactory.load()
   implicit val system: ActorSystem = ActorSystem("microservice", config)
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = system.dispatcher
 
   lazy val allRoutes: Route = routes
-  val session: Session = DBConfiguration().getSession
-  val supervisorActor: ActorRef = system.actorOf(SupervisorActor.props(session), "supervisorActor")
+  val supervisorActor: ActorRef = system.actorOf(SupervisorActor.props(), "supervisorActor")
   val serverBinding: Future[Http.ServerBinding] = Http().bindAndHandle(allRoutes, httpAddress, port)
 
   serverBinding.onComplete {

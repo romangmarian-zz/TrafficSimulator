@@ -5,47 +5,44 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorRef, ActorSystem, DeadLetter, Props, Terminated}
 import akka.http.scaladsl.{Http, HttpExt}
 import akka.pattern._
+import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.datastax.driver.core.Session
 import com.typesafe.config.Config
 import generator.{CoordinatesGenerator, UnitGenerator}
 import model._
 import osm.OSMRepo
-import repo.{Repo, RepoInit}
 import util.AbstractDBActor
 
-class SupervisorActor(session: Session)(implicit config: Config) extends AbstractDBActor with RepoInit {
+class SupervisorActor()(implicit config: Config) extends AbstractDBActor {
 
   implicit val http: HttpExt = Http(context.system)
   implicit lazy val system: ActorSystem = context.system
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-  private val ps: PreparedStatements = initializePreparedStatements(session)
-  private val repo: Repo = new Repo(session, ps, false)
   private val osmRepo: OSMRepo = new OSMRepo()
 
   private val unitGenerator: UnitGenerator = new UnitGenerator(self.actorRef)
 
-  protected val osmActor: ActorRef = context.actorOf(OSMActor
-    .props(repo, osmRepo, unitGenerator), "osmActor")
-
-  protected val kafkaActor: ActorRef = context.actorOf(KafkaActor.props())
+  protected val osmRouter: ActorRef =
+    context.actorOf(FromConfig.props(OSMActor.props(osmRepo, unitGenerator)), "osmRouter")
+  protected val kafkaRouter: ActorRef =
+    context.actorOf(FromConfig.props(KafkaActor.props()), "kafkaRouter")
 
   implicit val timeout: Timeout = Timeout(10, TimeUnit.SECONDS)
 
   override def preStart(): Unit = {
-    //    TraceLogger.debug("preStart: openOrdersSupervisor")
-    context.watch(osmActor)
+    context.watch(osmRouter)
+    context.watch(kafkaRouter)
   }
 
   def receive: Receive = {
 
     case request: GenerateRequest => sendRequestsToGenerateRoutes(request)
 
-    case ride: Ride => osmActor forward ride
+    case ride: Ride => osmRouter forward ride
 
-    case completedStep: CompletedStep => kafkaActor forward completedStep
+    case completedStep: CompletedStep => kafkaRouter forward completedStep
 
     case e: DeadLetter =>
       log.warning(s"The ${e.recipient} is not able to process message: ${e.message}")
@@ -64,11 +61,11 @@ class SupervisorActor(session: Session)(implicit config: Config) extends Abstrac
     val routeEnds: List[(Coordinate, Coordinate)] =
       CoordinatesGenerator.generateRandomCoordinatePairs(request.center, request.radius, request.numberOfUnits)
 
-    routeEnds.foreach(routeEnds => osmActor ! RouteRequest(routeEnds))
+    routeEnds.foreach(routeEnds => osmRouter ! RouteRequest(routeEnds))
   }
 }
 
 object SupervisorActor {
 
-  def props(session: Session)(implicit config: Config): Props = Props(new SupervisorActor(session))
+  def props()(implicit config: Config): Props = Props(new SupervisorActor())
 }

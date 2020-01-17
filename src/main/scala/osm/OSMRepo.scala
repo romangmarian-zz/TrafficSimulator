@@ -7,8 +7,8 @@ import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import model.OSMConstants.URL
 import model.{Coordinate, JsonSupport, OSMResponse}
+import model.OSMConstants.URL
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

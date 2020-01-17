@@ -3,6 +3,7 @@ package generator
 import com.peertopark.java.geocalc._
 import com.softwaremill.id.{DefaultIdGenerator, IdGenerator}
 import model.{Coordinate, OSMResponse, GenerateRouteStep, Step, Ride}
+import model.OSMConstants.METERS_TO_DEGREE_RATIO
 
 import scala.math.{Pi, cos, sin, sqrt}
 import scala.util.Random
@@ -18,7 +19,9 @@ object CoordinatesGenerator {
       (generateCoordinateInRadius(origin, radius), generateCoordinateInRadius(origin, radius))).toList
   }
 
-  def generateCoordinateInRadius(origin: Coordinate, radius: Double): Coordinate = {
+  def generateCoordinateInRadius(origin: Coordinate, radiusInKm: Double): Coordinate = {
+
+    val radius = (radiusInKm * 1000) / METERS_TO_DEGREE_RATIO
     val r = radius * sqrt(Random.nextDouble())
     val angle = Random.nextDouble() * 2 * Pi
 
@@ -50,5 +53,6 @@ object CoordinatesGenerator {
     GenerateRouteStep(location, bearing, step.distance, step.duration)
   }
 
-  def createRideStart(route: List[GenerateRouteStep]): Ride = Ride(route.head, route.tail, System.currentTimeMillis()/math.pow(10,3), idGenerator.nextId())
+  def createRideStart(route: List[GenerateRouteStep]): Ride = Ride(route.head, route.tail,
+    System.currentTimeMillis() / math.pow(10, 3), idGenerator.nextId().toString)
 }

@@ -20,6 +20,11 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val osmRequestJsonFormat: RootJsonFormat[GenerateRequest] = jsonFormat3(GenerateRequest)
 }
 
+object JsonS extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val coordinateJsonFormat: RootJsonFormat[Coordinate] = jsonFormat2(Coordinate)
+  implicit val compltedStepFromat: RootJsonFormat[CompletedStep] = jsonFormat3(CompletedStep)
+}
+
 // distance measured in meters, duration in seconds
 case class PreparedStatements()
 
@@ -114,8 +119,8 @@ case class GenerateRouteStep(
                             )
 
 case class CompletedStep(
-                          unitId: Long,
-                          step: GenerateRouteStep,
+                          unitId: String,
+                          location: Coordinate,
                           time: Long
                         )
 
@@ -129,6 +134,6 @@ case class Ride(
                  previousStep: GenerateRouteStep,
                  followingSteps: List[GenerateRouteStep],
                  previousTime: Double,
-                 unitId: Long,
+                 unitId: String,
                  remainingTime: Option[Double] = None
                )

@@ -5,11 +5,10 @@ import akka.event.jul.Logger
 import generator.{CoordinatesGenerator, UnitGenerator}
 import model._
 import osm.OSMRepo
-import repo.Repo
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class OSMActor(repo: Repo, osmRepo: OSMRepo, unitGenerator: UnitGenerator) extends
+class OSMActor(osmRepo: OSMRepo, unitGenerator: UnitGenerator) extends
   Actor with ActorLogging {
 
   val logger = Logger("log")
@@ -31,6 +30,6 @@ class OSMActor(repo: Repo, osmRepo: OSMRepo, unitGenerator: UnitGenerator) exten
 }
 
 object OSMActor {
-  def props(repo: Repo, osmRepo: OSMRepo, unitGenerator: UnitGenerator): Props =
-    Props(new OSMActor(repo, osmRepo, unitGenerator))
+  def props(osmRepo: OSMRepo, unitGenerator: UnitGenerator): Props =
+    Props(new OSMActor(osmRepo, unitGenerator))
 }

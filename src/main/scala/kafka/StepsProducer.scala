@@ -24,6 +24,5 @@ trait StepsProducer {
 
   def submitMsg(topic: String, completedStep: CompletedStep): Unit = {
     kafkaProducerActor ! ProducerRecords(List(KafkaProducerRecord(topic, completedStep.unitId, completedStep)))
-    kafkaProducerActor
   }
 }

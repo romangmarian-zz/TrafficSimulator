@@ -11,11 +11,12 @@ import com.typesafe.config.{Config, ConfigFactory}
 import util.Routes
 
 object Boot extends App with Routes {
+
   val httpAddress: String = "localhost"
   val port: Int = 8080
 
   implicit val config: Config = ConfigFactory.load()
-  implicit val system: ActorSystem = ActorSystem("microservice", config)
+  implicit val system: ActorSystem = ActorSystem("trafficSimulator", config)
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = system.dispatcher
 

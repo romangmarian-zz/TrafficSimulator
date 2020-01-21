@@ -28,7 +28,7 @@ class UnitGenerator(supervisorActor: ActorRef)(implicit system: ActorSystem) {
   }
 
   def updateCompletedSteps(ride: Ride): Unit = {
-    val reachTime = (ride.previousTime * math.pow(10, 9)).toLong
+    val reachTime = (ride.previousTime * math.pow(10, 3)).toLong
     val completedStep = CompletedStep(ride.unitId, Coordinate(ride.previousStep.location.getLatitude,
       ride.previousStep.location.getLongitude), reachTime)
     supervisorActor ! completedStep

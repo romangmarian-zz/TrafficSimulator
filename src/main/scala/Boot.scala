@@ -16,7 +16,7 @@ object Boot extends App with Routes {
   val port: Int = 8080
 
   implicit val config: Config = ConfigFactory.load()
-  implicit val system: ActorSystem = ActorSystem("trafficSimulator", config)
+  implicit val system: ActorSystem = ActorSystem("trafficGenerator", config)
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = system.dispatcher
 

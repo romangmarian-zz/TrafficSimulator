@@ -19,8 +19,8 @@ class OSMRepo(implicit val http: HttpExt, val actorMaterializer: ActorMaterializ
   val logger = Logger("logger")
 
   def getRequestURI(coordinates: (Coordinate, Coordinate)): String = {
-    val x = URL + s"${coordinates._1.latitude},${coordinates._1.longitude};" +
-      s"${coordinates._2.latitude},${coordinates._2.longitude}" + "?alternatives=false&steps=true&overview=false"
+    val x = URL + s"${coordinates._1.longitude},${coordinates._1.latitude};" +
+      s"${coordinates._2.longitude},${coordinates._2.latitude}" + "?alternatives=false&steps=true&overview=false"
     logger.warning(x)
     x
   }

@@ -58,10 +58,14 @@ class SupervisorActor()(implicit config: Config) extends AbstractDBActor {
 
   private def  sendRequestsToGenerateRoutes(request: GenerateRequest): Unit =  {
 
-    val routeEnds: List[(Coordinate, Coordinate)] =
+    val routeEndsList: List[(Coordinate, Coordinate)] =
       CoordinatesGenerator.generateRandomCoordinatePairs(request.center, request.radius, request.numberOfUnits)
 
-    routeEnds.foreach(routeEnds => osmRouter ! RouteRequest(routeEnds))
+    routeEndsList.foreach(routeEnds => {
+      //sleep pt a nu suprasolicita serverul OSRM
+      Thread.sleep(2)
+      osmRouter ! RouteRequest(routeEnds)
+    })
   }
 }
 

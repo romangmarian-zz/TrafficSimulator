@@ -14,7 +14,7 @@ class KafkaActor(implicit config: Config) extends Actor with ActorLogging with S
 
   def receive: Receive = {
     case completedStep: CompletedStep =>
-      Logger("log").info(self.path.name + " --->  " + completedStep.toString)
+//      Logger("log").info(self.path.name + " --->  " + completedStep.toString)
       submitMsg(topic, completedStep)
 
   }

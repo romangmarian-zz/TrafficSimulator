@@ -78,7 +78,7 @@ case class Step(
   def toPoint: Point = {
 
     val location = maneuver.location
-    Point.build(location.head, location.tail.head)
+    Point.build(location.tail.head, location.head)
   }
 }
 

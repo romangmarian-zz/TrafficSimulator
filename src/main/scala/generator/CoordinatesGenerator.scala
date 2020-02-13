@@ -1,8 +1,9 @@
 package generator
 
+import akka.event.slf4j.Logger
 import com.peertopark.java.geocalc._
 import com.softwaremill.id.{DefaultIdGenerator, IdGenerator}
-import model.{Coordinate, OSMResponse, GenerateRouteStep, Step, Ride}
+import model.{Coordinate, GenerateRouteStep, OSMResponse, Ride, Step}
 import model.OSMConstants.METERS_TO_DEGREE_RATIO
 
 import scala.math.{Pi, cos, sin, sqrt}
@@ -11,6 +12,7 @@ import scala.util.Random
 object CoordinatesGenerator {
 
   protected val idGenerator: IdGenerator = new DefaultIdGenerator()
+  var id = 0
 
   def generateRandomCoordinatePairs(origin: Coordinate, radius: Double,
                                     nbOfPairs: Int): List[(Coordinate, Coordinate)] = {
@@ -53,6 +55,12 @@ object CoordinatesGenerator {
     GenerateRouteStep(location, bearing, step.distance, step.duration)
   }
 
-  def createRideStart(route: List[GenerateRouteStep]): Ride = Ride(route.head, route.tail,
-    System.currentTimeMillis() / math.pow(10, 3), idGenerator.nextId().toString)
+  def createRideStart(route: List[GenerateRouteStep]): Ride = {
+
+//    val id = idGenerator.nextId()
+    id = id + 1
+    Logger("create ride").warn(s"Created id $id")
+    Ride(route.head, route.tail,
+      System.currentTimeMillis() / math.pow(10, 3), id.toString)
+  }
 }

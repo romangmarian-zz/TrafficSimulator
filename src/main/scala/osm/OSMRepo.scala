@@ -19,21 +19,23 @@ class OSMRepo(implicit val http: HttpExt, val actorMaterializer: ActorMaterializ
   val logger = Logger("logger")
 
   def getRequestURI(coordinates: (Coordinate, Coordinate)): String = {
-    val x = URL + s"${coordinates._1.longitude},${coordinates._1.latitude};" +
+    URL + s"${coordinates._1.longitude},${coordinates._1.latitude};" +
       s"${coordinates._2.longitude},${coordinates._2.latitude}" + "?alternatives=false&steps=true&overview=false"
-    logger.warning(x)
-    x
   }
 
   def getHTTPResponse(coordinates: (Coordinate, Coordinate)): Future[HttpResponse] = {
     http.singleRequest(HttpRequest(GET, getRequestURI(coordinates)))
   }
 
-  def toOSMRoute(httpResponse: HttpResponse): Future[OSMResponse] = httpResponse match {
-    case HttpResponse(StatusCodes.OK, _, entity, _) =>
-      Unmarshal(entity).to[OSMResponse]
-    case HttpResponse(status, _, entity, _) =>
-      Future.failed(new Exception(handleEndpointError(entity, status)))
+  def toOSMRoute(httpResponse: HttpResponse): Future[OSMResponse] =
+    {
+      httpResponse match {
+      case HttpResponse(StatusCodes.OK, _, entity, _) =>
+        Unmarshal(entity).to[OSMResponse]
+      case HttpResponse(status, _, entity, _) =>
+        logger.warning(status.toString())
+        Future.failed(new Exception(handleEndpointError(entity, status)))
+    }
   }
 
   private def handleEndpointError(entity: ResponseEntity, status: StatusCode): String = {
